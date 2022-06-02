@@ -34,7 +34,6 @@ router.post("/user/signup", async (req, res) => {
                         description: description,
                         username: username,
                         token: token,
-                        salt: salt,
                     });
                 } else {
                     res.status(400).json({ message: "Cet email est déjà utilisé" });
@@ -54,22 +53,23 @@ router.post("/user/signup", async (req, res) => {
 router.post("/user/login", async (req, res) => {
     try {
         if (req.fields.email === undefined) {
-            console.log("here")
-            res.status(400).json({ message: "email is not defined" })
+            res.status(400).json({ message: "mail is not defined" })
         } else {
             if (req.fields.password === undefined) {
                 res.status(400).json({ message: "password is not defined" })
             } else {
-                const checkUser = await User.findOne({ email: email });
-                if (checkUser === null) { //   et non undefined !!!
+                const checkUser = await User.findOne({ email: req.fields.email });
+                if (checkUser === undefined) { // not undefined
+                    console.log("not find user")
                     res.status(401).json({ message: "User not found !" })
                 } else {
-                    console.log("hello from check")
-                    //res.json("hello")
                     const newHash = SHA256(req.fields.password + checkUser.salt).toString(encBase64);
                     if (checkUser.hash === newHash) {
                         res.json({
                             _id: checkUser._id,
+                            email: checkUser.email,
+                            description: checkUser.description,
+                            username: checkUser.username,
                             token: checkUser.token,
                         })
                     } else {
